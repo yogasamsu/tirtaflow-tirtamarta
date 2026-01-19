@@ -74,7 +74,7 @@ export async function uploadLetterAction(formData: FormData) {
         console.log("OCR Text Preview:", ocrText.substring(0, 100))
 
         // 3. Parse with Groq (Llama3-70b or similar)
-        if (ocrText) {
+        if (ocrText && ocrText.trim().length > 10) {
             const chatCompletion = await groq.chat.completions.create({
                 messages: [
                     {
@@ -102,10 +102,10 @@ export async function uploadLetterAction(formData: FormData) {
             const content = chatCompletion.choices[0]?.message?.content || "{}"
             extractedWithAI = JSON.parse(content)
         } else {
-            console.warn("OCR returned empty text.")
+            console.warn("OCR returned empty or too short text.")
             extractedWithAI = {
-                summary: 'OCR returned empty text. Please check the file quality or OCR Key.',
-                sender: 'Unknown (OCR Empty)',
+                summary: `OCR Issue: Text too short (${ocrText.length} chars). File might be blurry or empty.`,
+                sender: 'Unknown (OCR Failed)',
                 subject: 'OCR Failed'
             }
         }
