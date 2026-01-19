@@ -15,10 +15,11 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from '@/components/ui/badge'
-import { Search, Eye, Trash2, SendHorizontal, FileSpreadsheet } from 'lucide-react'
+import { Search, Eye, Trash2, SendHorizontal, FileSpreadsheet, Pencil } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import { deleteLetterAction } from '@/app/actions/delete-letter'
+import { updateLetterAction } from '@/app/actions/update-letter'
 import { useRouter } from 'next/navigation'
 import { getUsersAction } from '@/app/actions/get-users'
 import { createDispositionAction } from '@/app/actions/create-disposition'
@@ -55,6 +56,12 @@ export default function AllLettersPage() {
     const [targetUser, setTargetUser] = useState('')
     const [notes, setNotes] = useState('')
     const [dispLoading, setDispLoading] = useState(false)
+
+    // Edit State
+    const [editLetter, setEditLetter] = useState<any>(null)
+    const [isEditOpen, setIsEditOpen] = useState(false)
+    const [editForm, setEditForm] = useState({ summary: '', date_received: '', status: '' })
+    const [editLoading, setEditLoading] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -122,6 +129,34 @@ export default function AllLettersPage() {
             alert('Disposition failed')
         }
         setDispLoading(false)
+    }
+
+    const startEdit = (letter: any, e: React.MouseEvent) => {
+        e.preventDefault()
+        setEditLetter(letter)
+        setEditForm({
+            summary: letter.summary || '',
+            date_received: new Date(letter.date_received).toISOString().split('T')[0],
+            status: letter.status || 'new'
+        })
+        setIsEditOpen(true)
+    }
+
+    const handleSaveEdit = async () => {
+        if (!editLetter) return
+        setEditLoading(true)
+
+        const result = await updateLetterAction(editLetter.id, editForm)
+
+        if (result.success) {
+            setLetters(letters.map(l => l.id === editLetter.id ? { ...l, ...editForm } : l))
+            setIsEditOpen(false)
+            setEditLetter(null)
+            router.refresh()
+        } else {
+            alert(result.error)
+        }
+        setEditLoading(false)
     }
 
     const handleDownloadExcel = () => {
@@ -242,6 +277,9 @@ export default function AllLettersPage() {
                                                 <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Quick Disposition" onClick={(e) => openDisposition(l, e)}>
                                                     <SendHorizontal className="h-4 w-4" />
                                                 </Button>
+                                                <Button size="icon" variant="ghost" className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50" title="Edit Letter" onClick={(e) => startEdit(l, e)}>
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
                                                 <Link href={`/letter/${l.id}`}>
                                                     <Button size="icon" variant="ghost" className="h-8 w-8" title="View Details">
                                                         <Eye className="h-4 w-4" />
@@ -307,6 +345,63 @@ export default function AllLettersPage() {
                         <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
                         <Button onClick={handleQuickDisposition} disabled={dispLoading || !targetUser}>
                             {dispLoading ? 'Sending...' : 'Send Disposition'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Letter Modal */}
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Letter</DialogTitle>
+                        <DialogDescription>
+                            Manually correct letter details.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Date Received</Label>
+                            <Input
+                                type="date"
+                                value={editForm.date_received}
+                                onChange={(e) => setEditForm(prev => ({ ...prev, date_received: e.target.value }))}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Status</Label>
+                            <Select
+                                value={editForm.status}
+                                onValueChange={(val) => setEditForm(prev => ({ ...prev, status: val }))}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="new">New</SelectItem>
+                                    <SelectItem value="dispositioned">Dispositioned</SelectItem>
+                                    <SelectItem value="processed">Processed</SelectItem>
+                                    <SelectItem value="completed">Completed</SelectItem>
+                                    <SelectItem value="archived">Archived</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Summary</Label>
+                            <Textarea
+                                className="min-h-[150px]"
+                                value={editForm.summary}
+                                onChange={(e) => setEditForm(prev => ({ ...prev, summary: e.target.value }))}
+                                placeholder="Letter summary..."
+                            />
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+                        <Button onClick={handleSaveEdit} disabled={editLoading}>
+                            {editLoading ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
