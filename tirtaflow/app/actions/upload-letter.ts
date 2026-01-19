@@ -101,6 +101,13 @@ export async function uploadLetterAction(formData: FormData) {
 
             const content = chatCompletion.choices[0]?.message?.content || "{}"
             extractedWithAI = JSON.parse(content)
+        } else {
+            console.warn("OCR returned empty text.")
+            extractedWithAI = {
+                summary: 'OCR returned empty text. Please check the file quality or OCR Key.',
+                sender: 'Unknown (OCR Empty)',
+                subject: 'OCR Failed'
+            }
         }
 
     } catch (error) {
