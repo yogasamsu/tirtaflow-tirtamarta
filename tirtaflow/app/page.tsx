@@ -40,7 +40,7 @@ export default function Home() {
                                 </span>
                             </h1>
                             <p className="text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                                Platform digitalisasi persuratan resmi Perumda Air Minum Tirtamarta.
+                                Platform digitalisasi persuratan resmi PDAM Tirtamarta.
                                 Disposisi cepat, arsip aman, dan analisis cerdas berbasis AI untuk efisiensi birokrasi.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
@@ -68,7 +68,7 @@ export default function Home() {
                                     priority
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
-                                    <p className="text-white font-medium text-lg">Kantor Pusat Perumda Air Minum Tirtamarta</p>
+                                    <p className="text-white font-medium text-lg">Kantor Pusat PDAM Tirtamarta</p>
                                 </div>
                             </div>
                             {/* Floating Badge */}
@@ -154,7 +154,7 @@ export default function Home() {
                             height={40}
                             className="h-10 w-auto opacity-80 grayscale hover:grayscale-0 transition-all"
                         />
-                        <span className="font-semibold text-white">Perumda Air Minum Tirtamarta</span>
+                        <span className="font-semibold text-white">PDAM Tirtamarta</span>
                     </div>
                     <div className="text-sm">
                         &copy; {new Date().getFullYear()} Tirtaflow System. Developed for Internal Use.
