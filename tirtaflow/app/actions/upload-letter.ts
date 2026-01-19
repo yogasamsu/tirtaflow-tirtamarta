@@ -62,13 +62,23 @@ export async function uploadLetterAction(formData: FormData) {
 
         const ocrResult = await ocrResponse.json()
 
+        // Check for errors, but handle "page limit" as a warning if we got some text
         if (ocrResult.IsErroredOnProcessing) {
-            console.error("OCR Error:", ocrResult.ErrorMessage)
-            throw new Error(ocrResult.ErrorMessage?.[0] || "OCR Failed")
+            const errorMessage = String(ocrResult.ErrorMessage || "")
+            // Check if it's just the page limit warning and we actually have results
+            if (errorMessage.includes("maximum page limit") && ocrResult.ParsedResults?.length > 0) {
+                console.warn("OCR Warning: Page limit reached. Proceeding with partial text.", errorMessage)
+            } else {
+                console.error("OCR Error:", ocrResult.ErrorMessage)
+                throw new Error(ocrResult.ErrorMessage?.[0] || "OCR Failed")
+            }
         }
 
         if (ocrResult.ParsedResults && ocrResult.ParsedResults.length > 0) {
-            ocrText = ocrResult.ParsedResults[0].ParsedText
+            // Join text from all parsed pages
+            ocrText = ocrResult.ParsedResults
+                .map((page: any) => page.ParsedText)
+                .join("\n\n--- PAGE BREAK ---\n\n")
         }
 
         console.log("OCR Text Preview:", ocrText.substring(0, 100))
